@@ -134,7 +134,7 @@ pipeline {
             
             Stage que falhou: ${env.STAGE_NAME}
             
-            Verifique os logs acima
+            Verifique os logs acima!
             
             ========================================
             
