@@ -11,16 +11,16 @@ pipeline {
             steps {
                 echo "Validando ambiente..."
                 
-                sh '''
-                    echo "Repositorio clonado:"
+                bat '''
+                    echo Repositorio clonado:
                     git remote -v
                     
-                    echo ""
-                    echo "Arquivos no repositorio:"
-                    ls -la
+                    echo.
+                    echo Arquivos no repositorio:
+                    dir
                     
-                    echo ""
-                    echo "Testando curl:"
+                    echo.
+                    echo Testando curl:
                     curl --version
                 '''
             }
@@ -30,9 +30,9 @@ pipeline {
             steps {
                 echo "Criando pasta documentacao..."
                 
-                sh '''
-                    mkdir -p documentacao
-                    echo "Pasta criada"
+                bat '''
+                    if not exist documentacao mkdir documentacao
+                    echo Pasta criada
                 '''
             }
         }
@@ -41,19 +41,19 @@ pipeline {
             steps {
                 echo "Baixando visao geral da API..."
                 
-                sh '''
-                    echo "URL: ${API_URL}/api/download/${JOB_ID}/visao-geral"
+                bat '''
+                    echo URL: %API_URL%/api/download/%JOB_ID%/visao-geral
                     
-                    curl -v -o documentacao/01_visao_geral.md \\
-                        ${API_URL}/api/download/${JOB_ID}/visao-geral
+                    curl -v -o documentacao/01_visao_geral.md ^
+                        %API_URL%/api/download/%JOB_ID%/visao-geral
                     
-                    echo ""
-                    echo "Arquivo baixado:"
-                    ls -lh documentacao/01_visao_geral.md
+                    echo.
+                    echo Arquivo baixado:
+                    dir documentacao\\01_visao_geral.md
                     
-                    echo ""
-                    echo "Primeiras 5 linhas do arquivo:"
-                    head -n 5 documentacao/01_visao_geral.md
+                    echo.
+                    echo Primeiras 5 linhas do arquivo:
+                    powershell -Command "Get-Content documentacao/01_visao_geral.md -Head 5"
                 '''
             }
         }
@@ -67,32 +67,30 @@ pipeline {
                     usernameVariable: 'GIT_USER',
                     passwordVariable: 'GIT_TOKEN'
                 )]) {
-                    sh '''
-                        # Configurar Git
+                    bat '''
                         git config user.name "Jenkins Bot"
                         git config user.email "jenkins@empresa.com"
                         
-                        # Adicionar arquivo
                         git add documentacao/01_visao_geral.md
                         
-                        # Verificar se ha mudancas
-                        echo "Status do Git:"
+                        echo Status do Git:
                         git status
                         
-                        if ! git diff --staged --quiet; then
-                            echo ""
-                            echo "Commitando..."
+                        git diff --staged --quiet
+                        if errorlevel 1 (
+                            echo.
+                            echo Commitando...
                             git commit -m "docs: Adiciona visao geral do programa CALCSAL"
                             
-                            echo ""
-                            echo "Fazendo push..."
-                            git push https://${GIT_USER}:${GIT_TOKEN}@github.com/devjuannobrega/CALCSAL.git main
+                            echo.
+                            echo Fazendo push...
+                            git push https://%GIT_USER%:%GIT_TOKEN%@github.com/devjuannobrega/CALCSAL.git main
                             
-                            echo ""
-                            echo "Commit e push concluidos!"
-                        else
-                            echo "Nenhuma mudanca para commitar"
-                        fi
+                            echo.
+                            echo Commit e push concluidos!
+                        ) else (
+                            echo Nenhuma mudanca para commitar
+                        )
                     '''
                 }
             }
